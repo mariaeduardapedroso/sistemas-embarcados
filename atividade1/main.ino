@@ -22,6 +22,8 @@ static bool messageReady = false;
 volatile int messageHeader = 0;
 volatile int messageTrailer = 0;
 volatile int message = 0;
+#define MESSAGE_SIZE 20
+char bitsIncomingMessage[MESSAGE_SIZE * 8 + 8];
 
 void TimerHandler1(unsigned int outputPin = OUT_PORT) {
   static bool toggle1 = false;
@@ -45,8 +47,15 @@ void TimerHandler1(unsigned int outputPin = OUT_PORT) {
 
       messageHeader++;
     } else {
-      if (message <= 0) {
+      if (message <= (MESSAGE_SIZE * 8 + 8)) {
+        Serial.print("\nMENSAGEM ");
 
+        if (bitsIncomingMessage[message] == 0) {
+          Serial.println("0");
+        } else {
+          Serial.println("1");
+        }
+        toggle1 = bitsIncomingMessage[message];
         message++;
       } else {
         if (messageTrailer <= TAMTRAILER) {
@@ -63,8 +72,10 @@ void TimerHandler1(unsigned int outputPin = OUT_PORT) {
         } else {
           //sendBits(incomingMessage);
           messageReady = false;
+          toggle1 = false;
           messageHeader = 0;
           messageTrailer = 0;
+          message = 0;
         }
       }
     }
@@ -105,10 +116,10 @@ unsigned int outputPin = A0;
 
 
 #define SERIAL_BAUD_RATE 9600
-#define MESSAGE_SIZE 20
+
 
 char incomingMessage[MESSAGE_SIZE + 1];  // +1 for null terminator
-char bitsIncomingMessage[MESSAGE_SIZE * 8 + 8];
+
 
 volatile int messageIndex = 0;
 volatile int messageIndexBits = 0;
@@ -161,6 +172,13 @@ void loop() {
       }
       // Se encontrar um caractere de nova linha, a mensagem está pronta
       if (incomingChar == '\n') {
+        int falta = MESSAGE_SIZE - messageIndex;
+        Serial.print("\nFALTA");
+        Serial.println(falta);
+        for (int i = 0; i < falta; i++) {
+          incomingMessage[messageIndex++] = ' ';
+          charToBits(' ');
+        }
         incomingMessage[messageIndex] = '\0'; // Adiciona o terminador de string
         charToBits('\0');
         messageIndex = 0; // Reseta o índice para a próxima mensagem
