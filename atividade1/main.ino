@@ -56,7 +56,7 @@ void TimerHandler1(unsigned int outputPin = OUT_PORT) {
       }
       messageHeader++; // Incrementa o índice do cabeçalho
     } else { // Se o cabeçalho já foi enviado
-      if (message <= (MESSAGE_SIZE * 8)) { // Se ainda não enviou toda a mensagem
+      if (message < (MESSAGE_SIZE * 8)) { // Se ainda não enviou toda a mensagem
         // Envia o próximo bit da mensagem
         if (bitsIncomingMessage[message] == 0) {
           toggle1 = false;
@@ -164,8 +164,6 @@ void loop() {
           incomingMessage[messageIndex++] = ' '; // Completa a mensagem com espaços em branco
           charToBits(' '); // Converte o espaço em branco para bits
         }
-        // incomingMessage[messageIndex] = '\0'; // Adiciona o terminador de string à mensagem
-        // charToBits('\0'); // Converte o terminador de string para bits
         messageIndex = 0; // Reseta o índice para a próxima mensagem
         messageIndexBits = 0; // Reseta o índice para a próxima mensagem
         messageReady = true; // Indica que uma nova mensagem está pronta
