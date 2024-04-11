@@ -35,6 +35,51 @@ char incomingMessage[MESSAGE_SIZE + 1]; // Array para armazenar a mensagem receb
 volatile int messageIndex = 0; // Índice para a mensagem
 volatile int messageIndexBits = 0; // Índice para os bits da mensagem
 
+void sendNextBit(bool &toggle1) {
+  if (messageHeader <= TAMHEADER) { // Se ainda não enviou todo o cabeçalho da mensagem
+    // Envia o próximo bit do cabeçalho
+    if (HEADER[messageHeader] == '1') {
+      toggle1 = true;
+      Serial.println("\nHEADER 1");
+    } else {
+      toggle1 = false;
+      Serial.println("\nHEADER 0");
+    }
+    messageHeader++; // Incrementa o índice do cabeçalho
+  } else { // Se o cabeçalho já foi enviado
+    if (message < (MESSAGE_SIZE * 8)) { // Se ainda não enviou toda a mensagem
+      // Envia o próximo bit da mensagem
+      if (bitsIncomingMessage[message] == 0) {
+        toggle1 = false;
+        Serial.println("\nMENSAGEM 0");
+      } else {
+        toggle1 = true;
+        Serial.println("\nMENSAGEM 1");
+      }
+      message++; // Incrementa o índice da mensagem
+    } else { // Se a mensagem foi enviada completamente
+      if (messageTrailer <= TAMTRAILER) { // Se ainda não enviou todo o trailer da mensagem
+        // Envia o próximo bit do trailer
+        if (TRAILER[messageTrailer] == '1') {
+          toggle1 = true;
+          Serial.println("\TRAILER 1");
+        } else {
+          toggle1 = false;
+          Serial.println("\TRAILER 0");
+        }
+        messageTrailer++; // Incrementa o índice do trailer
+      } else { // Se o trailer já foi enviado completamente
+        // Finaliza o envio da mensagem
+        messageReady = false;
+        toggle1 = false;
+        messageHeader = 0;
+        messageTrailer = 0;
+        message = 0;
+      }
+    }
+  }
+}
+
 // Função de tratamento de interrupção do Timer 1
 void TimerHandler1(unsigned int outputPin = OUT_PORT) {
   static bool toggle1 = false; // Variável para alternar entre ligado/desligado
@@ -45,48 +90,7 @@ void TimerHandler1(unsigned int outputPin = OUT_PORT) {
 #endif
 
   if (messageReady) { // Se uma mensagem estiver pronta para ser enviada
-    if (messageHeader <= TAMHEADER) { // Se ainda não enviou todo o cabeçalho da mensagem
-      // Envia o próximo bit do cabeçalho
-      if (HEADER[messageHeader] == '1') {
-        toggle1 = true;
-        Serial.println("\nHEADER 1");
-      } else {
-        toggle1 = false;
-        Serial.println("\nHEADER 0");
-      }
-      messageHeader++; // Incrementa o índice do cabeçalho
-    } else { // Se o cabeçalho já foi enviado
-      if (message < (MESSAGE_SIZE * 8)) { // Se ainda não enviou toda a mensagem
-        // Envia o próximo bit da mensagem
-        if (bitsIncomingMessage[message] == 0) {
-          toggle1 = false;
-          Serial.println("\nMENSAGEM 0");
-        } else {
-          toggle1 = true;
-           Serial.println("\nMENSAGEM 1");
-        }
-        message++; // Incrementa o índice da mensagem
-      } else { // Se a mensagem foi enviada completamente
-        if (messageTrailer <= TAMTRAILER) { // Se ainda não enviou todo o trailer da mensagem
-          // Envia o próximo bit do trailer
-          if (TRAILER[messageTrailer] == '1') {
-            toggle1 = true;
-            Serial.println("\TRAILER 1");
-          } else {
-            toggle1 = false;
-            Serial.println("\TRAILER 0");
-          }
-          messageTrailer++; // Incrementa o índice do trailer
-        } else { // Se o trailer já foi enviado completamente
-          // Finaliza o envio da mensagem
-          messageReady = false;
-          toggle1 = false;
-          messageHeader = 0;
-          messageTrailer = 0;
-          message = 0;
-        }
-      }
-    }
+    sendNextBit(toggle1);
   } else { // Se nenhuma mensagem está pronta para ser enviada
     toggle1 = false;
   }
@@ -172,4 +176,3 @@ void loop() {
     }
   }
 }
-
