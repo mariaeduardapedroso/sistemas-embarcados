@@ -7,10 +7,10 @@ LiquidCrystal lcd(rs, en, d4, d5, d6, d7);
 // Definição dos pinos para o joystick e botão
 const int joyXPin = A0;
 const int joyYPin = A1;
-const int joyButtonPin = 6;
+const int joyButtonPin = 7;
 
 // Definição do pino para o buzzer
-const int buzzerPin = 7;
+const int buzzerPin = 8;
 
 // Variáveis para armazenar os horários do alarme e atual
 int alarmHour = 0;
